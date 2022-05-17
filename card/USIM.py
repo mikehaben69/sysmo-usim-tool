@@ -584,12 +584,11 @@ class USIM(UICC):
             fd.write('\n')
         
         fd.close()
-#
+
     def get_5G_auth_keys(self):
         """
-        reads EF_5GAUTHKEYS at address [0x6F, 0x01] under DF_5GS
-        returns list of 2 keys, each are list of bytes, on success 
-            (or eventually the whole file dict if the format is strange)
+        reads EF_5GAUTHKEYS at address [0x4F, 0x05] under DF_5GS
+        returns the whole file dict
         or None on error
         """
         self.SELECT_ADF_USIM()
@@ -601,15 +600,21 @@ class USIM(UICC):
         if self.coms()[2] != (0x90, 0x00):
             print("Failed to select EF_5GAUTHKEYS!")
             return None
-        print(EF_5GAUTHKEYS['Data'])
-        if len(EF_5GAUTHKEYS['Data']) == 33:
-            KSI, CK, IK = ( EF_5GAUTHKEYS['Data'][0:1],
-                            EF_5GAUTHKEYS['Data'][1:17],
-                            EF_5GAUTHKEYS['Data'][17:33])
-            log(3, '(get_CS_keys) successful CS keys selection: ' \
-                    'Get [KSI, CK, IK]')
-            return [KSI, CK, IK]
-        else: 
-            return EF_5GAUTHKEYS
+        return EF_5GAUTHKEYS
     
-
+    def get_5G_SUCI_calc_info(self):
+        """
+        reads get_5G_SUCI_calc_info at address [0x4F, 0x07] under DF_5GS
+        returns the whole file dict
+        or None on error
+        """
+        self.SELECT_ADF_USIM()
+        DF_5GS = self.select( [0x5F, 0xC0] )
+        if self.coms()[2] != (0x90, 0x00):
+            print("Failed to select DF_5GS!")
+            return None
+        EF_SUCI_CalcInfo = self.select( [0x4F, 0x07] )
+        if self.coms()[2] != (0x90, 0x00):
+            print("Failed to select EF_SUCI_CalcInfo!")
+            return None
+        return EF_SUCI_CalcInfo

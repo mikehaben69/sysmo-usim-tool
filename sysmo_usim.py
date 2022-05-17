@@ -120,7 +120,6 @@ class Sysmo_usim:
 		self._init()
 		print(" * Reading...")
 		print(" * Card ICCID: %s" % self.sim.card.get_ICCID())
-		print(" * Detected Card 5G auth keys:  %s" % self.sim.card.get_5G_auth_keys())
 		print("")
 
 
@@ -214,3 +213,7 @@ class Sysmo_usim:
 				appstr = "(unknown)"
 			print("   AID: " + hexdump(a[0:5]) + " " +  hexdump(a[5:7]) + " " +  hexdump(a[7:]) + " ==> " + appstr)
 		print("")
+
+	def show_5G_files(self):
+		print(" * Detected Card 5G auth keys:  %s" % self.sim.card.get_5G_auth_keys())
+		print(" SUCI_CalcInfo: %s" % self.sim.card.get_5G_SUCI_calc_info())

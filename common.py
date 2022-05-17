@@ -26,12 +26,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from utils import *
 import sys, getopt
 
-COMMON_GETOPTS = "hfa:J:nN:lL:kK:tT:oO:C:sSip"
+COMMON_GETOPTS = "hfa:J:nN:lL:kK:tT:oO:C:sSipz"
 COMMON_GETOPTS_LONG = ["help", "force", "adm1=", "set-imsi=", "mnclen",
 		       "set-mnclen=", "milenage", "set-milenage=", "ki",
 		       "set-ki=", "auth", "set-auth=", "opc", "set-op=",
 		       "set-opc=", "seq-parameters", "reset-seq-parameters"
-		       "iccid", "aid"]
+		       "iccid", "aid", "5gs"]
 
 # Parse common commandline options and keep them as flags
 class Common():
@@ -111,12 +111,14 @@ class Common():
 				self.show_iccid = True
 			elif opt in ("-p", "--aid"):
 				self.show_aid = True
+			elif opt in ("-z", "--5gs"):
+				self.show_5G_files = True
 
 		# Check for ADM1 key
 		if not self.adm1:
-			print(" * Error: adm1 parameter missing -- exiting...")
+			print(" * Error: adm1 parameter missing - subsequent operations may fail!")
 			print("")
-			sys.exit(1)
+#			sys.exit(1)
 
 		# Set flags for specific options
 		self._options(opts)
@@ -150,16 +152,18 @@ class Common():
 		print("   -S  --reset-seq-parameters ..... Reset MILENAGE SEQ/SQN parameters to default")
 		print("   -i  --iccid .................... Show ICCID")
 		print("   -p  --aid ...................... Show AID list (installed applications)")
+		print("   -z  --5gs ...................... Show files under DF_5GS")
 		self._helptext()
 
 
 	# Execute common tasks
 	def __common_execute(self):
 
-		# Autnetnication is a primary task that must always run before
+		# Authentication is a primary task that must always run before
 		# any other task is carried out
-		if self.sim.admin_auth(self.adm1, self.force) == False:
-			exit(1)
+		if self.adm1 is not None:
+			if self.sim.admin_auth(self.adm1, self.force) == False:
+				exit(1)
 
 		# First run the card specific tasks
 		self._execute()
@@ -212,5 +216,8 @@ class Common():
 
 		if self.show_aid:
 			self.sim.show_aid()
+
+		if self.show_5G_files:
+			self.sim.show_5G_files()
 
 		print("Done!")

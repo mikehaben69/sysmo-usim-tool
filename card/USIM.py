@@ -273,7 +273,7 @@ class USIM(UICC):
         """
         EF_KEYS = self.select( [0x6F, 0x08] )
         if self.coms()[2] == (0x90, 0x00):
-            if len(EF_KEYS['Data']) == 33:
+            if len(EF_KEYS['EF_KEYSData']) == 33:
                 KSI, CK, IK = ( EF_KEYS['Data'][0:1],
                                 EF_KEYS['Data'][1:17],
                                 EF_KEYS['Data'][17:33])
@@ -320,7 +320,8 @@ class USIM(UICC):
         EF_GBABP = self.select( [0x6F, 0xD6] )
         if self.coms()[2] == (0x90, 0x00):
             if len(EF_GBABP['Data']) > 2:
-                #RAND, B_TID, Lifetime = LV_parser( EF_GBABP['Data'] )
+    
+     #RAND, B_TID, Lifetime = LV_parser( EF_GBABP['Data'] )
                 log(3, '(get_GBA_BP) successful GBA_BP selection: ' \
                        'Get list of [RAND, B-TID, KeyLifetime]')
                 #return (RAND, B_TID, Lifetime)
@@ -333,7 +334,7 @@ class USIM(UICC):
         """
         update_GBA_BP([RAND], [B_TID], [key_lifetime]) 
             -> void (or EF_GBABP file dict if RAND not found)
-        
+        EF_KEYS
         reads EF_GBABP file at address [0x6F, 0xD6],
         checks if RAND provided is referenced, 
         and updates the file structure with provided B-TID and KeyLifetime
@@ -343,7 +344,7 @@ class USIM(UICC):
         GBA_BP = self.get_GBA_BP()
         for i in GBA_BP:
             if i == RAND:
-                log(3, '(update_GBA_BP) RAND found in GBA_BP')
+                log(3, '(python3 sysmo-isim-tool.sja2.py --adm1update_GBA_BP) RAND found in GBA_BP')
                 # update transparent file with B_TID and key lifetime
                 self.coms.push( self.UPDATE_BINARY( P2=len(RAND)+1,
                                 Data=[len(B_TID)] + B_TID + \
@@ -391,7 +392,7 @@ class USIM(UICC):
                             B_TID = tlv[2]
                     values.append( [NAF_ID, B_TID] )
                 
-                log(3, '(get_GBA_NL) Successful GBA_NL selection: ' \
+                log(3, '(getEF_KEYS_GBA_NL) Successful GBA_NL selection: ' \
                        'Get list of [NAF_ID, B-TID]')
                 #return (NAF_ID, B_TID)
                 return values
@@ -404,9 +405,7 @@ class USIM(UICC):
         self.authenticate(RAND, AUTN, ctx='3G') -> [key1, key2...], 
         LV parsing style
         
-        runs the INTERNAL AUTHENTICATE command in the USIM 
-        with the right context:
-            ctx = '2G', '3G', 'GBA' ('MBMS' or other not supported at this time)
+        runs the INTERNALpython3 sysmo-isim-tool.sja2.py --adm13G', 'GBA' ('MBMS' or other not supported at this time)
             RAND and AUTN are list of bytes; for '2G' context, AUTN is not used
         returns a list containing the keys (list of bytes) computed in the USIM,
         on success:
@@ -586,4 +585,31 @@ class USIM(UICC):
         
         fd.close()
 #
+    def get_5G_auth_keys(self):
+        """
+        reads EF_5GAUTHKEYS at address [0x6F, 0x01] under DF_5GS
+        returns list of 2 keys, each are list of bytes, on success 
+            (or eventually the whole file dict if the format is strange)
+        or None on error
+        """
+        self.SELECT_ADF_USIM()
+        DF_5GS = self.select( [0x5F, 0xC0] )
+        if self.coms()[2] != (0x90, 0x00):
+            print("Failed to select DF_5GS!")
+            return None
+        EF_5GAUTHKEYS = self.select( [0x4F, 0x05] )
+        if self.coms()[2] != (0x90, 0x00):
+            print("Failed to select EF_5GAUTHKEYS!")
+            return None
+        print(EF_5GAUTHKEYS['Data'])
+        if len(EF_5GAUTHKEYS['Data']) == 33:
+            KSI, CK, IK = ( EF_5GAUTHKEYS['Data'][0:1],
+                            EF_5GAUTHKEYS['Data'][1:17],
+                            EF_5GAUTHKEYS['Data'][17:33])
+            log(3, '(get_CS_keys) successful CS keys selection: ' \
+                    'Get [KSI, CK, IK]')
+            return [KSI, CK, IK]
+        else: 
+            return EF_5GAUTHKEYS
+    
 

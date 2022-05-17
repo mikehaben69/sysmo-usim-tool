@@ -120,6 +120,7 @@ class Sysmo_usim:
 		self._init()
 		print(" * Reading...")
 		print(" * Card ICCID: %s" % self.sim.card.get_ICCID())
+		print(" * Detected Card 5G auth keys:  %s" % self.sim.card.get_5G_auth_keys())
 		print("")
 
 
